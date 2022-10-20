@@ -22,44 +22,22 @@ export class UsersController {
 
     @Get(':id')
     getById(@Param() parameter): User {
-        return this.service.getById(parameter);
+        return this.service.getById(parameter.id);
     }
 
     @Put(':id')
     modifyUser(@Param() parameter, @Body() input): User {
-        let indice = 0;
-        for (indice; indice<users.length ; indice++){
-            if (+users[indice].id===+parameter.id) {
-                break;
-            }
-        }
-        if (input.firstName !== undefined) {
-            users[indice].firstName = input.firstName;
-        } if (input.lastName !== undefined) {
-            users[indice].lastName = input.lastName;
-        }
-        return users[indice];
+        return this.service.modifyUser(parameter.id, input.firstName, input.lastName);
     }
 
     @Delete(':id')
     eraseUser(@Param() parameter): Boolean {
-        let indice = 0;
-        for (indice; indice<users.length ; indice++){
-            if (+users[indice].id===+parameter.id) {
-                break;
-            }
-        } if (indice===users.length) {
-            throw new HttpException(`Could not find a user with the id ${parameter.id}`, HttpStatus.NOT_FOUND);
-        } else {
-            users.splice(indice, 1);
-            return true;
-        }
+        return this.service.eraseUser(parameter.id);
     }
 
     @Post()
     create(@Body() input: any):User {
-        this.service.create(input.firstname, input.lastname)
-        return User;
+        return this.service.create(input.firstName, input.lastName, input.age);
     }
 
 }
