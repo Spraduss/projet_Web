@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { User } from 'src/users/user.entity';
 import { UsersService } from 'src/users/users.service';
+import { Repository } from 'typeorm';
 import { Association } from './associations.entity';
 
 
@@ -15,65 +16,56 @@ const associations: Association[] = [ {
 export class AssociationsService {
 
     constructor(
-        private service: UsersService
+        private service: UsersService,
+        private repository: Repository<Association>
     ) {}
 
-    retrieve(): Association[] {
-        return associations;
+    async retrieve(): Promise<Association[]> {
+        return await this.repository.find({});
     }
 
-    getById(id: number): Association {
-        for (let i=0 ; i<associations.length ; i++){
-            if (id===associations[i].id) {
-                return associations[i];
-            }
-        }
-        throw new HttpException(`Could not find an association with the id ${id}`, HttpStatus.NOT_FOUND);
+    async getById(idToFind: number): Promise<Association> {
+        let association = this.repository.findOne({where: {id: idToFind,},});
+        if(association === undefined) throw new HttpException(`Could not find an association with the id ${idToFind}`, HttpStatus.NOT_FOUND);
+        else return association;
     }
 
-    modifyAssociation(id: number, users: User[], name: string): Association {
-        if (id!==undefined && users!==undefined && name!==undefined) {
-            for (let i=0 ; i<associations.length ; i++){
-                if (id===associations[i].id) {
-                    associations[i].name = name;
-                    associations[i].users = users;
-                    return associations[i];
+    async modifyAssociation(id: number, idUsers: number[], name: string): Promise<Association> {
+        let associations = await this.getById(id);
+        if (associations === undefined) throw new HttpException(`Could not find an association with the id ${id}`, HttpStatus.NOT_FOUND);
+        else {
+            associations.name = name;
+            if (idUsers.length >= 1) {
+                associations.users = [];
+                for (let i=0 ; i<idUsers.length ; i++){
+                    associations[i].users.push(await this.service.getById(idUsers[i]));
                 }
-            }
-        }
-        throw new HttpException(`Could not find an association with the id ${id}`, HttpStatus.NOT_FOUND);
-    }
-
-    eraseAssociation(id:number): boolean {
-        let indice = 0;
-        for (indice; indice<associations.length ; indice++){
-            if (+associations[indice].id===+id) {
-                break;
-            }
-        } if (indice===associations.length) {
-            throw new HttpException(`Could not find an association with the id ${id}`, HttpStatus.NOT_FOUND);
-        } else {
-            associations.splice(indice, 1);
-            return true;
+            }  
+            return this.repository.save(associations);
         }
     }
 
-    create(name: string, users: User[]) {
-        if (name!==undefined && users!==undefined) {
-            associations.push(new Association(associations.length, users, name));
-            return associations[associations.length-1];
-        }
+    async eraseAssociation(id:number): Promise<boolean> {
+        let association = await this.getById(id);
+        let deletion = await this.repository.delete(association);
+        return deletion!==undefined;
     }
 
-    getMembers(id: number): User[] {
-        if (id!==undefined) {
-            let users: User[] = [];
-            for (let i=0 ; i<associations.length ; i++){
-                if (+associations[i].id===+id) {
-                    return associations[i].users;
-                }
-            }
+    async create(name: string, idUsers: number[]) {
+        let idToCreate: number = 0;
+        let users: User[] = [];
+        for (let i=0 ; i<idUsers.length ; i++){
+            let user = await this.service.getById(idUsers[i]);
+            users.push(user);
         }
-        throw new HttpException(`Could not find an association with the id ${id}`, HttpStatus.NOT_FOUND);
+        const asso = this.repository.create({id: idToCreate, users: users, name: name})
+        return this.repository.save(asso);
+    }
+
+    async getMembers(id: number): Promise<User[]> {
+        let association = await this.getById(id);
+        if (association === undefined) throw new HttpException(`Could not find an association with the id ${id}`, HttpStatus.NOT_FOUND);
+        else return association.users;
+        
     }
 }
