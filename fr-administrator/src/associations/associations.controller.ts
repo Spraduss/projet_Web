@@ -1,4 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { User } from 'src/users/user.entity';
 import { Association } from './associations.entity';
 import { AssociationsService } from './associations.service';
 
@@ -17,6 +18,11 @@ export class AssociationsController {
     @Get(':id')
     getById(@Param() parameter): Association {
         return this.service.getById(parameter.id);
+    }
+
+    @Get(':id/members')
+    getMembers(@Param() parameter): User[] {
+        return this.service.getMembers(parameter.id);
     }
 
     @Put(':id')

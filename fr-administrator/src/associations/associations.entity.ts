@@ -1,12 +1,16 @@
+import { User } from "src/users/user.entity";
+import { Entity } from "typeorm";
+
+@Entity()
 export class Association {
 
     public id: number;
-    public idUsers: number[];
+    public users: User[];
     public name: string;
 
-    constructor (id: number, idUsers: number[], name: string) {
+    constructor (id: number, users: User[], name: string) {
         this.id = id;
-        this.idUsers = idUsers;
+        this.users = users;
         this.name = name;
     }
 }
