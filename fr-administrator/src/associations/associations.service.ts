@@ -1,4 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { User } from 'src/users/user.entity';
+import { UsersService } from 'src/users/users.service';
 import { Association } from './associations.entity';
 
 
@@ -12,13 +14,17 @@ const associations: Association[] = [ {
 @Injectable()
 export class AssociationsService {
 
+    constructor(
+        private service: UsersService  
+    ) {}
+
     retrieve(): Association[] {
         return associations;
     }
 
     getById(id: number): Association {
         for (let i=0 ; i<associations.length ; i++){
-            if (id===associations[i].id) {
+            if (+id===+associations[i].id) {
                 return associations[i];
             }
         }
@@ -28,7 +34,7 @@ export class AssociationsService {
     modifyAssociation(id: number, idUsers: number[], name: string): Association {
         if (id!==undefined && idUsers!==undefined && name!==undefined) {
             for (let i=0 ; i<associations.length ; i++){
-                if (id===associations[i].id) {
+                if (+id===+associations[i].id) {
                     associations[i].name = name;
                     associations[i].idUsers = idUsers;
                     return associations[i];
@@ -57,5 +63,15 @@ export class AssociationsService {
             associations.push(new Association(associations.length, idUsers, name));
             return associations[associations.length-1];
         }
+    }
+
+    getMembers(id: number): User[] {
+        let asso: Association = this.getById(id);
+        let users: User[] = [];
+        for (let i=0 ; i<asso.idUsers.length ; i++) {
+            let idUser: number = asso.idUsers[i];
+            users.push(this.service.getById(idUser));
+        }
+        return users;
     }
 }
