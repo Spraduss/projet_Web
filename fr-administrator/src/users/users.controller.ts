@@ -27,7 +27,7 @@ export class UsersController {
 
     @Put(':id')
     modifyUser(@Param() parameter, @Body() input): User {
-        return this.service.modifyUser(parameter.id, input.firstName, input.lastName);
+        return this.service.modifyUser(parameter.id, input.firstname, input.lastname);
     }
 
     @Delete(':id')
@@ -37,7 +37,7 @@ export class UsersController {
 
     @Post()
     create(@Body() input: any):User {
-        return this.service.create(input.firstName, input.lastName, input.age);
+        return this.service.create(input.firstname, input.lastname, input.age);
     }
 
 }

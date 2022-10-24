@@ -27,6 +27,7 @@ export class AssociationsController {
 
     @Put(':id')
     modifyAssociation(@Param() parameter, @Body() input): Association {
+        console.log(input.idUsers);
         return this.service.modifyAssociation(parameter.id, input.idUsers, input.name);
     }
 

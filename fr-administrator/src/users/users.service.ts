@@ -1,48 +1,68 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { User } from './user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Equal, Repository } from 'typeorm';
-import { last } from 'rxjs';
 
 
+
+const users : User[] = [
+    {
+        id: 0,
+        lastname: 'Doe',
+        firstname: 'Jonh',
+        age: 23
+    }
+]
 
 @Injectable()
 export class UsersService {
 
-    constructor(
-        @InjectRepository(User)
-        private repository: Repository<User>
-    ) {}
-
-    
-    async retrieve(): Promise<User[]> {
-        return await this.repository.find({});
+    retrieve(): User[] {
+        return users;
     }
 
-    async getById(idToFind: number): Promise<User> {
-        let user = this.repository.findOne({where: {id: idToFind,},});
-        if (user===undefined) throw new HttpException(`Could not find a user with the id ${idToFind}`, HttpStatus.NOT_FOUND);
-        return user;
+    getById(id: number): User {
+        for (let i=0 ; i<users.length ; i++){
+            if (+users[i].id===+id) {
+                return users[i];
+            }
+        }
+
+        throw new HttpException(`Could not find a user with the id ${id}`, HttpStatus.NOT_FOUND);
     }
 
-    async modifyUser(id: number, firstName: string, lastName: string, age: number): Promise<User> {
-        let user = await this.getById(id);
-        user.firstName = firstName;
-        user.lastName = lastName;
-        user.age = age;
-        return await this.repository.save(user);
+    modifyUser(id: number, firstname: string, lastname: string): User {
+        let indice = 0;
+        for (indice; indice<users.length ; indice++){
+            if (+users[indice].id===+id) {
+                break;
+            }
+        }
+        if (firstname !== undefined) {
+            users[indice].firstname = firstname;
+        } if (lastname !== undefined) {
+            users[indice].lastname = lastname;
+        }
+        return users[indice];
     }
 
-    async eraseUser(id: number): Promise<Boolean> {
-        let user = await this.getById(id);
-        let deletion = await this.repository.delete(user);
-        return deletion!==undefined;
+    eraseUser(id: number): Boolean {
+        let indice = 0;
+        for (indice; indice<users.length ; indice++){
+            if (+users[indice].id===+id) {
+                break;
+            }
+        } if (indice===users.length) {
+            throw new HttpException(`Could not find a user with the id ${id}`, HttpStatus.NOT_FOUND);
+        } else {
+            users.splice(indice, 1);
+            return true;
+        }
     }
 
-    async create(firstName: string, lastName: string, age: number):Promise<User> {
-        let idToCreate: number = 0;
-        const user = this.repository.create({id: idToCreate, lastName: lastName, firstName: firstName, age: age})
-        return this.repository.save(user);
+    create(firstname: string, lastname: string, age: number):User {
+        if (firstname!==undefined && lastname!==undefined && age!==undefined) {
+            users.push(new User(users.length, lastname, firstname, age));
+            return users[users.length-1];
+        }
     }
 
 }
